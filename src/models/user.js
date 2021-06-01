@@ -9,15 +9,47 @@ const userSchema = new mongoose.Schema({
         required:true,
         trim:true
     },
-    email:{
+    
+    userId:{
+        type:Number,
+        unique:false,
+        required:false,
+        validate(value){
+            if(value <0){
+                throw new Error('userid cannot be negative')
+            }
+        }
+    },
+    username:{
         type:String,
         unique:true,
         required:true,
+        trim:true,
+        validate(value){
+            if(!validator.isLength(value,5,10)){
+                throw new Error('UserId is invalid')
+            }
+        }
+    },
+    email:{
+        type:String,
+        unique:false,
+        required:false,
         validate(value){
             if(!validator.isEmail(value)){
                 throw new Error('Email is invalid')
             }
         }
+    },
+    phone:{
+        type:String,
+        unique:false,
+        required:false
+    },
+    website:{
+        type:String,
+        unique:false,
+        required:false
     },
     password:{
         type:String,
@@ -36,6 +68,40 @@ const userSchema = new mongoose.Schema({
         validate(value){
             if(value <0){
                 throw new Error('Age cannot be negative')
+            }
+        }
+    },
+
+    company:{
+        name:{
+            type:String
+        },
+        catchPhrase:{
+            type:String
+        },
+        bs:{
+            type:String
+        },
+    },
+    address:{
+        street:{
+            type:String
+        },
+        suite:{
+            type:String
+        },
+        city:{
+            type:String
+        },
+        zipcode:{
+            type:String
+        },
+        geo:{
+            lat:{
+                type:String
+            },
+            lng:{
+                type:String
             }
         }
     },
@@ -72,8 +138,8 @@ userSchema.methods.generateAuthToken = async function(){
     await user.save()
     return token
 }
-userSchema.statics.findUserByCredentials = async (email,password) =>{
-    const user  = await User.findOne({email})
+userSchema.statics.findUserByCredentials = async (username,password) =>{
+    const user  = await User.findOne({username})
     if(!user){
         throw new Error('Unable to login')
     }
@@ -82,6 +148,13 @@ userSchema.statics.findUserByCredentials = async (email,password) =>{
         throw new Error('Failed to login')
     }
     return user
+}
+userSchema.statics.isUserExistByName = async (username) =>{
+    const user  = await User.findOne({username})
+    if(!user){
+        return false
+    }
+    return user.username === username.trim()
 }
 
 userSchema.pre('save',async function(next){

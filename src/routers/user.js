@@ -7,22 +7,29 @@ const router = new express.Router()
 
 
 router.post('/users', async (req, res) => {
-   const user = new User(req.body)
-   try {
-      await user.save()
-      sendWelcomeEmail(user.email,user.name)
-      const token = await user.generateAuthToken()
-      res.status(201).send({ user, token })
-   } catch (err) {
-      res.status(404).send(err)
+
+   const existingUser = await User.isUserExistByName(req.body.username)
+   if(existingUser){
+      res.status(202).send({ 'status': 202, 'message': 'User already exist'})
+   }else{
+      const user = new User(req.body)
+      try {
+            await user.save()
+            const token = await user.generateAuthToken()
+            res.status(201).send({ user, token })
+      } catch (err) {
+         res.status(404).send(err)
+      }
    }
 });
 
 router.post('/users/login', async (req, res) => {
    try {
-      const user = await User.findUserByCredentials(req.body.email, req.body.password)
+      console.log(req.body)
+      const user = await User.findUserByCredentials(req.body.username, req.body.password)
       const token = await user.generateAuthToken()
-      res.send({ user, token })
+      res.send({ "user":{"username":user.username,"_id":user._id,"name":user.name,"lattitude":user.address.geo.lat,
+      "longitude":user.address.geo.lng,"city":user.address.city,"zipcode":user.address.zipcode,"street":user.address.street}, token })
    } catch (error) {
       res.status(400).send(error.message)
    }
@@ -33,7 +40,7 @@ router.post('/users/logout', auth, async (req, res) => {
          return tokenObj.token !== req.token
       })
       await req.user.save()
-      res.send({ 'status': 200, 'message': 'Logout successfully!' })
+      res.status(200).send({'status':200,'message': 'Logout successfully!'})
 
    } catch (err) {
       res.status(500).send(err)
