@@ -14,11 +14,6 @@ const userSchema = new mongoose.Schema({
         type:Number,
         unique:false,
         required:false,
-        validate(value){
-            if(value <0){
-                throw new Error('userid cannot be negative')
-            }
-        }
     },
     username:{
         type:String,
@@ -35,11 +30,6 @@ const userSchema = new mongoose.Schema({
         type:String,
         unique:false,
         required:false,
-        validate(value){
-            if(!validator.isEmail(value)){
-                throw new Error('Email is invalid')
-            }
-        }
     },
     phone:{
         type:String,
